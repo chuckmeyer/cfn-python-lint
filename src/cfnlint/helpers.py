@@ -1,18 +1,8 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Helpers for loading resources, managing specs, constants, etc.
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
 import sys
 import fnmatch
@@ -29,8 +19,13 @@ try:
     from urllib.request import urlopen
 except ImportError:
     from urllib2 import urlopen
-import pkg_resources
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    # Try backported to PY<37 `importlib_resources`.
+    import importlib_resources as pkg_resources
 import six
+from cfnlint.data import CloudSpecs
 from cfnlint.decode.node import dict_node, list_node, str_node
 
 LOGGER = logging.getLogger(__name__)
@@ -165,16 +160,12 @@ def get_url_content(url):
     return content
 
 
-def load_resources(filename='data/CloudSpecs/us-east-1.json'):
-    """Load resources"""
-
-    filename = pkg_resources.resource_filename(
-        __name__,
-        filename
-    )
-
-    with open(filename) as fp:
-        return json.load(fp)
+def load_resource(package, filename='us-east-1.json'):
+    """Load CloudSpec resources
+        :param filename: filename to load
+        :return: Json output of the resource laoded
+    """
+    return json.loads(pkg_resources.read_text(package, filename, encoding='utf-8'))
 
 
 RESOURCE_SPECS = {}
@@ -261,7 +252,7 @@ def bool_compare(first, second):
 def initialize_specs():
     """ Reload Resource Specs """
     for reg in REGIONS:
-        RESOURCE_SPECS[reg] = load_resources(filename=('data/CloudSpecs/%s.json' % reg))
+        RESOURCE_SPECS[reg] = load_resource(CloudSpecs, filename=('%s.json' % reg))
 
 
 initialize_specs()

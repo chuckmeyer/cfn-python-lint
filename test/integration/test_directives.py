@@ -1,46 +1,156 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
-from cfnlint import Template, Runner  # pylint: disable=E0401
-from cfnlint.rules import RulesCollection
-from cfnlint.core import DEFAULT_RULESDIR  # pylint: disable=E0401
-import cfnlint.decode.cfn_yaml  # pylint: disable=E0401
-from testlib.testcase import BaseTestCase
+from test.integration import BaseCliTestCase
 
 
-class TestDirectives(BaseTestCase):
-    """Test Directives """
-
-    def setUp(self):
-        """ SetUp template object"""
-        self.rules = RulesCollection(include_rules=['I'])
-        rulesdirs = [DEFAULT_RULESDIR]
-        for rulesdir in rulesdirs:
-            self.rules.create_from_directory(rulesdir)
+class TestDirectives(BaseCliTestCase):
+    '''Test Directives '''
+    scenarios = [
+        {
+            'filename': 'test/fixtures/templates/bad/core/directives.yaml',
+            'exit_code': 2,
+            'results': [
+                {
+                    'Filename': 'test/fixtures/templates/bad/core/directives.yaml',
+                    'Level': 'Error',
+                    'Location': {
+                        'End': {
+                            'ColumnNumber': 18,
+                            'LineNumber': 17
+                        },
+                        'Path': [
+                            'Resources',
+                            'myBucketFail',
+                            'Properties',
+                            'BucketName1'
+                        ],
+                        'Start': {
+                            'ColumnNumber': 7,
+                            'LineNumber': 17
+                        }
+                    },
+                    'Message': 'Invalid Property Resources/myBucketFail/Properties/BucketName1',
+                    'Rule': {
+                        'Description': 'Making sure that resources properties are properly configured',
+                        'Id': 'E3002',
+                        'ShortDescription': 'Resource properties are valid',
+                        'Source': 'https://github.com/aws-cloudformation/cfn-python-lint/blob/master/docs/cfn-resource-specification.md#properties'
+                    }
+                },
+                {
+                    'Filename': 'test/fixtures/templates/bad/core/directives.yaml',
+                    'Level': 'Error',
+                    'Location': {
+                        'End': {
+                            'ColumnNumber': 13,
+                            'LineNumber': 28
+                        },
+                        'Path': [
+                            'Resources',
+                            'myBucketFirstAndLastPass',
+                            'Properties',
+                            'BadKey'
+                        ],
+                        'Start': {
+                            'ColumnNumber': 7,
+                            'LineNumber': 28
+                        }
+                    },
+                    'Message': 'Invalid Property Resources/myBucketFirstAndLastPass/Properties/BadKey',
+                    'Rule': {
+                        'Description': 'Making sure that resources properties are properly configured',
+                        'Id': 'E3002',
+                        'ShortDescription': 'Resource properties are valid',
+                        'Source': 'https://github.com/aws-cloudformation/cfn-python-lint/blob/master/docs/cfn-resource-specification.md#properties'
+                    }
+                },
+                {
+                    'Filename': 'test/fixtures/templates/bad/core/directives.yaml',
+                    'Level': 'Error',
+                    'Location': {
+                        'End': {
+                            'ColumnNumber': 16,
+                            'LineNumber': 32
+                        },
+                        'Path': [
+                            'Resources',
+                            'myBucketFirstAndLastFail',
+                            'BadProperty'
+                        ],
+                        'Start': {
+                            'ColumnNumber': 5,
+                            'LineNumber': 32
+                        }
+                    },
+                    'Message': 'Invalid resource attribute BadProperty for resource myBucketFirstAndLastFail',
+                    'Rule': {
+                        'Description': 'Making sure the basic CloudFormation resources are properly configured',
+                        'Id': 'E3001',
+                        'ShortDescription': 'Basic CloudFormation Resource Check',
+                        'Source': 'https://github.com/aws-cloudformation/cfn-python-lint'
+                    }
+                },
+                {
+                    'Filename': 'test/fixtures/templates/bad/core/directives.yaml',
+                    'Level': 'Error',
+                    'Location': {
+                        'End': {
+                            'ColumnNumber': 13,
+                            'LineNumber': 35
+                        },
+                        'Path': [
+                            'Resources',
+                            'myBucketFirstAndLastFail',
+                            'Properties',
+                            'BadKey'
+                        ],
+                        'Start': {
+                            'ColumnNumber': 7,
+                            'LineNumber': 35
+                        }
+                    },
+                    'Message': 'Invalid Property Resources/myBucketFirstAndLastFail/Properties/BadKey',
+                    'Rule': {
+                        'Description': 'Making sure that resources properties are properly configured',
+                        'Id': 'E3002',
+                        'ShortDescription': 'Resource properties are valid',
+                        'Source': 'https://github.com/aws-cloudformation/cfn-python-lint/blob/master/docs/cfn-resource-specification.md#properties'
+                    }
+                },
+                {
+                    'Filename': 'test/fixtures/templates/bad/core/directives.yaml',
+                    'Level': 'Error',
+                    'Location': {
+                        'End': {
+                            'ColumnNumber': 15,
+                            'LineNumber': 37
+                        },
+                        'Path': [
+                            'Resources',
+                            'myBucketFirstAndLastFail',
+                            'Properties',
+                            'VersioningConfiguration',
+                            'Status'
+                        ],
+                        'Start': {
+                            'ColumnNumber': 9,
+                            'LineNumber': 37
+                        }
+                    },
+                    'Message': 'You must specify a valid value for Status (Enabled1).\nValid values are ["Enabled", "Suspended"]',
+                    'Rule': {
+                        'Description': 'Check if properties have a valid value in case of an enumator',
+                        'Id': 'E3030',
+                        'ShortDescription': 'Check if properties have a valid value',
+                        'Source': 'https://github.com/aws-cloudformation/cfn-python-lint/blob/master/docs/cfn-resource-specification.md#allowedvalue'
+                    }
+                }
+            ]
+        }
+    ]
 
     def test_templates(self):
-        """Test ignoring certain rules"""
-        filename = 'test/fixtures/templates/bad/core/directives.yaml'
-        failures = 5
-
-        template = cfnlint.decode.cfn_yaml.load(filename)
-        runner = Runner(self.rules, filename, template, ['us-east-1'])
-        matches = []
-        matches.extend(runner.transform())
-        if not matches:
-            matches.extend(runner.run())
-        assert len(matches) == failures, 'Expected {} failures, got {} on {}'.format(
-            failures, len(matches), filename)
+        '''Test ignoring certain rules'''
+        self.run_scenarios()

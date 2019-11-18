@@ -1,18 +1,6 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
 import json
 import six
@@ -52,7 +40,10 @@ class StateMachine(CloudFormationLintRule):
         ]
         state_key_types = {
             'Pass': ['Result', 'ResultPath', 'Parameters'],
-            'Task': ['Resource', 'ResultPath', 'Retry', 'Catch', 'TimeoutSeconds', 'Parameters', 'HeartbeatSeconds'],
+            'Task': ['Resource', 'ResultPath', 'Retry', 'Catch',
+                     'TimeoutSeconds', 'Parameters', 'HeartbeatSeconds'],
+            'Map': ['MaxConcurrency', 'Iterator', 'ItemsPath', 'ResultPath',
+                    'Retry', 'Catch', 'Parameters'],
             'Choice': ['Choices', 'Default'],
             'Wait': ['Seconds', 'Timestamp', 'SecondsPath', 'TimestampPath'],
             'Succeed': [],
@@ -71,7 +62,8 @@ class StateMachine(CloudFormationLintRule):
 
         for req_key in common_state_required_keys:
             if req_key not in def_json:
-                message = 'State Machine Definition required key (%s) for State (%s) is missing' % (req_key, state_name)
+                message = 'State Machine Definition required key (%s) for State (%s) is missing' % (
+                    req_key, state_name)
                 matches.append(RuleMatch(path, message))
                 return matches
 
@@ -80,11 +72,13 @@ class StateMachine(CloudFormationLintRule):
         if state_type in state_key_types:
             for state_key, _ in def_json.items():
                 if state_key not in common_state_keys + state_key_types.get(state_type, []):
-                    message = 'State Machine Definition key (%s) for State (%s) of Type (%s) is not valid' % (state_key, state_name, state_type)
+                    message = 'State Machine Definition key (%s) for State (%s) of Type (%s) is not valid' % (
+                        state_key, state_name, state_type)
                     matches.append(RuleMatch(path, message))
             for req_key in common_state_required_keys + state_required_types.get(state_type, []):
                 if req_key not in def_json:
-                    message = 'State Machine Definition required key (%s) for State (%s) of Type (%s) is missing' % (req_key, state_name, state_type)
+                    message = 'State Machine Definition required key (%s) for State (%s) of Type (%s) is missing' % (
+                        req_key, state_name, state_type)
                     matches.append(RuleMatch(path, message))
                     return matches
         else:

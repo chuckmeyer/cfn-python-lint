@@ -1,26 +1,13 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
 import json
 import six
-from cfnlint.helpers import convert_dict
+from cfnlint.helpers import convert_dict, load_resource
 from cfnlint.rules import CloudFormationLintRule
 from cfnlint.rules import RuleMatch
-
-import cfnlint.helpers
+from cfnlint.data import AdditionalSpecs
 
 
 class Permissions(CloudFormationLintRule):
@@ -56,7 +43,7 @@ class Permissions(CloudFormationLintRule):
         """
         Convert policies.json into a simpler version for more efficient key lookup.
         """
-        service_map = cfnlint.helpers.load_resources('data/AdditionalSpecs/Policies.json')['serviceMap']
+        service_map = load_resource(AdditionalSpecs, 'Policies.json')['serviceMap']
 
         policy_service_map = {}
 
@@ -105,7 +92,8 @@ class Permissions(CloudFormationLintRule):
                                 actions.extend(self.get_actions(effective_permission))
 
                         for action in actions:
-                            matches.extend(self.check_permissions(action, p_p + ['Statement', index]))
+                            matches.extend(self.check_permissions(
+                                action, p_p + ['Statement', index]))
 
         return matches
 

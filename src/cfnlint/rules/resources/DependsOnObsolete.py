@@ -1,18 +1,6 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
 from cfnlint.rules import CloudFormationLintRule
 from cfnlint.rules import RuleMatch
@@ -52,7 +40,7 @@ class DependsOnObsolete(CloudFormationLintRule):
         for tree in trees:
             if tree[-1] == key:
                 message = 'Obsolete DependsOn on resource ({0}), dependency already enforced by a "Ref" at {1}'
-                matches.append(RuleMatch(path, message.format(key, '/'.join(map(str, tree)))))
+                matches.append(RuleMatch(path, message.format(key, '/'.join(map(str, tree[:-1])))))
 
         # Get the GetAtt
         trees = self.get_resource_references(cfn, 'Fn::GetAtt', resource)
@@ -61,7 +49,7 @@ class DependsOnObsolete(CloudFormationLintRule):
             # GettAtt formation is "resource : Attribute", just check the resource
             if tree[-1][0] == key:
                 message = 'Obsolete DependsOn on resource ({0}), dependency already enforced by a "Fn:GetAtt" at {1}'
-                matches.append(RuleMatch(path, message.format(key, '/'.join(map(str, tree)))))
+                matches.append(RuleMatch(path, message.format(key, '/'.join(map(str, tree[:-1])))))
 
         return matches
 
@@ -79,7 +67,8 @@ class DependsOnObsolete(CloudFormationLintRule):
                 self.logger.debug('Validating unneeded DependsOn for %s', resource_name)
                 if isinstance(depends_ons, list):
                     for index, depends_on in enumerate(depends_ons):
-                        matches.extend(self.check_depends_on(cfn, resource_name, depends_on, path[:] + [index]))
+                        matches.extend(self.check_depends_on(
+                            cfn, resource_name, depends_on, path[:] + [index]))
                 else:
                     matches.extend(self.check_depends_on(cfn, resource_name, depends_ons, path))
 

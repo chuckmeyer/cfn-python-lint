@@ -1,18 +1,6 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
 import logging
 import sys
@@ -28,6 +16,7 @@ import cfnlint.helpers
 import cfnlint.conditions
 from cfnlint.transform import Transform
 from cfnlint.decode.node import TemplateAttributeError
+from cfnlint.helpers import PSEUDOPARAMS
 from cfnlint.rules import RuleMatch as _RuleMatch
 from cfnlint.rules import Match as _Match
 from cfnlint.rules import RulesCollection as _RulesCollection
@@ -38,7 +27,6 @@ from cfnlint.rules import RuleError as _RuleError
 import cfnlint.rules
 
 LOGGER = logging.getLogger(__name__)
-
 
 # pylint: disable=too-many-lines
 def refactored(message):
@@ -114,6 +102,7 @@ class Template(object):  # pylint: disable=R0904
         self.transform_pre['Globals'] = {}
         self.transform_pre['Ref'] = self.search_deep_keys('Ref')
         self.transform_pre['Fn::Sub'] = self.search_deep_keys('Fn::Sub')
+        self.transform_pre['Fn::FindInMap'] = self.search_deep_keys('Fn::FindInMap')
         self.conditions = cfnlint.conditions.Conditions(self)
 
     def __deepcopy__(self, memo):
@@ -205,17 +194,7 @@ class Template(object):  # pylint: disable=R0904
                     element['From'] = 'Resources'
                     results[name] = element
 
-        pseudoparams = [
-            'AWS::AccountId',
-            'AWS::NotificationARNs',
-            'AWS::NoValue',
-            'AWS::Partition',
-            'AWS::Region',
-            'AWS::StackId',
-            'AWS::StackName',
-            'AWS::URLSuffix'
-        ]
-        for pseudoparam in pseudoparams:
+        for pseudoparam in PSEUDOPARAMS:
             element = {}
             element['Type'] = 'Pseudo'
             element['From'] = 'Pseduo'
@@ -229,16 +208,23 @@ class Template(object):  # pylint: disable=R0904
         results = {}
         resources = self.template.get('Resources', {})
 
-        astrik_types = (
-            'Custom::', 'AWS::CloudFormation::Stack',
+        astrik_string_types = (
+            'AWS::CloudFormation::Stack',
+        )
+        astrik_unknown_types = (
+            'Custom::',
             'AWS::Serverless::', 'AWS::CloudFormation::CustomResource'
         )
+
         for name, value in resources.items():
             if 'Type' in value:
                 valtype = value['Type']
-                if valtype.startswith(astrik_types):
+                if valtype.startswith(astrik_string_types):
                     LOGGER.debug('Cant build an appropriate getatt list from %s', valtype)
                     results[name] = {'*': {'PrimitiveItemType': 'String'}}
+                elif valtype.startswith(astrik_unknown_types):
+                    LOGGER.debug('Cant build an appropriate getatt list from %s', valtype)
+                    results[name] = {'*': {}}
                 else:
                     if value['Type'] in resourcetypes:
                         if 'Attributes' in resourcetypes[valtype]:

@@ -27,6 +27,13 @@
       "d2.4xlarge",
       "d2.8xlarge",
       "d2.xlarge",
+      "g4dn.12xlarge",
+      "g4dn.16xlarge",
+      "g4dn.2xlarge",
+      "g4dn.4xlarge",
+      "g4dn.8xlarge",
+      "g4dn.metal",
+      "g4dn.xlarge",
       "i3.16xlarge",
       "i3.2xlarge",
       "i3.4xlarge",
@@ -56,6 +63,14 @@
       "m5a.8xlarge",
       "m5a.large",
       "m5a.xlarge",
+      "m5ad.12xlarge",
+      "m5ad.16xlarge",
+      "m5ad.24xlarge",
+      "m5ad.2xlarge",
+      "m5ad.4xlarge",
+      "m5ad.8xlarge",
+      "m5ad.large",
+      "m5ad.xlarge",
       "m5d.12xlarge",
       "m5d.16xlarge",
       "m5d.24xlarge",
@@ -88,6 +103,14 @@
       "r5a.8xlarge",
       "r5a.large",
       "r5a.xlarge",
+      "r5ad.12xlarge",
+      "r5ad.16xlarge",
+      "r5ad.24xlarge",
+      "r5ad.2xlarge",
+      "r5ad.4xlarge",
+      "r5ad.8xlarge",
+      "r5ad.large",
+      "r5ad.xlarge",
       "r5d.12xlarge",
       "r5d.16xlarge",
       "r5d.24xlarge",
@@ -183,6 +206,18 @@
       "dc2.large",
       "ds2.8xlarge",
       "ds2.xlarge"
+    ]
+  },
+  {
+    "op": "add",
+    "path": "/ValueTypes/DocumentDBInstanceClass/AllowedValues",
+    "value": [
+      "db.r5.12xlarge",
+      "db.r5.24xlarge",
+      "db.r5.2xlarge",
+      "db.r5.4xlarge",
+      "db.r5.large",
+      "db.r5.xlarge"
     ]
   }
 ]

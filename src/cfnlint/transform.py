@@ -1,18 +1,6 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
 import os
 import logging
@@ -22,7 +10,8 @@ from samtranslator.parser import parser
 from samtranslator.translator.translator import Translator
 from samtranslator.public.exceptions import InvalidDocumentException
 
-from cfnlint.helpers import load_resources, convert_dict, format_json_string
+from cfnlint.helpers import load_resource, convert_dict, format_json_string
+from cfnlint.data import Serverless
 from cfnlint.rules import Match, TransformError
 LOGGER = logging.getLogger('cfnlint')
 
@@ -55,7 +44,7 @@ class Transform(object):
         Load the ManagedPolicies locally, based on the AWS-CLI:
         https://github.com/awslabs/aws-sam-cli/blob/develop/samcli/lib/samlib/default_managed_policies.json
         """
-        return load_resources('data/Serverless/ManagedPolicies.json')
+        return load_resource(Serverless, 'ManagedPolicies.json')
 
     def _replace_local_codeuri(self):
         """
@@ -92,7 +81,7 @@ class Transform(object):
                     Transform._update_to_s3_uri('Location', resource_dict)
             if resource_type == 'AWS::Serverless::Api':
                 if ('DefinitionBody' not in resource_dict and
-                        'Auth' not in resource_dict):
+                        'Auth' not in resource_dict and 'Cors' not in resource_dict):
                     Transform._update_to_s3_uri('DefinitionUri', resource_dict)
                 else:
                     resource_dict['DefinitionBody'] = ''

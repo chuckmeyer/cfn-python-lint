@@ -1,18 +1,6 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
 import fileinput
 import sys
@@ -64,6 +52,7 @@ class JSONDecodeError(ValueError):
     colno: The column corresponding to pos
     """
     # Note that this exception is used from _json
+
     def __init__(self, msg, doc, pos, key=' '):
         lineno = doc.count('\n', 0, pos) + 1
         colno = pos - doc.rfind('\n', 0, pos)
@@ -119,7 +108,7 @@ def py_scanstring(s, end, strict=True,
         # or a backslash denoting that an escape sequence follows
         if terminator == '"':
             break
-        elif terminator != '\\':
+        if terminator != '\\':
             if strict:
                 msg = 'Invalid control character {0!r} at'.format(terminator)
                 raise JSONDecodeError(msg, s, end)
@@ -244,7 +233,7 @@ def CfnJSONObject(s_and_end, strict, scan_once, object_hook, object_pairs_hook,
 
         if nextchar == '}':
             break
-        elif nextchar != ',':
+        if nextchar != ',':
             raise JSONDecodeError('Expecting \',\' delimiter', s, end - 1)
         end = _w(s, end).end()
         nextchar = s[end:end + 1]
@@ -348,6 +337,7 @@ def get_beg_end_mark(s, start, end):
 
     return beg_mark, end_mark
 
+
 def load(filename):
     """
     Load the given JSON file
@@ -364,11 +354,13 @@ def load(filename):
 
     return json.loads(content, cls=CfnJSONDecoder)
 
+
 class CfnJSONDecoder(json.JSONDecoder):
     """
     Converts a json string, where datetime and timedelta objects were converted
     into strings using the DateTimeAwareJSONEncoder, into a python object.
     """
+
     def __init__(self, *args, **kwargs):
         json.JSONDecoder.__init__(self, *args, **kwargs)
         self.parse_object = CfnJSONObject

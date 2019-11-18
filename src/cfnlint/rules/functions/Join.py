@@ -1,18 +1,6 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
 import six
 from cfnlint.rules import CloudFormationLintRule
@@ -78,18 +66,22 @@ class Join(CloudFormationLintRule):
             return True
         return False
 
-
     def _is_getatt_a_list(self, parameter, get_atts):
         """ Is a GetAtt a List """
 
         for resource, attributes in get_atts.items():
             for attribute_name, attribute_values in attributes.items():
-                if resource == parameter[0] and attribute_name in ['*', parameter[1]]:
+                if resource == parameter[0] and attribute_name == '*':
+                    if attribute_values.get('PrimitiveItemType'):
+                        return 'FALSE'
                     if attribute_values.get('Type') == 'List':
-                        return True
+                        return 'TRUE'
+                    return 'UNKNOWN'
+                if resource == parameter[0] and attribute_name == parameter[1]:
+                    if attribute_values.get('Type') == 'List':
+                        return 'TRUE'
 
-        return False
-
+        return 'FALSE'
 
     def _match_string_objs(self, join_string_objs, cfn, path):
         """ Check join list """
@@ -112,7 +104,7 @@ class Join(CloudFormationLintRule):
                             matches.append(RuleMatch(
                                 path, message.format('/'.join(map(str, path)))))
                     elif key in ['Fn::GetAtt']:
-                        if not self._is_getatt_a_list(self._normalize_getatt(value), get_atts):
+                        if self._is_getatt_a_list(self._normalize_getatt(value), get_atts) == 'FALSE':
                             message = 'Fn::Join must use a list at {0}'
                             matches.append(RuleMatch(
                                 path, message.format('/'.join(map(str, path)))))
@@ -139,7 +131,7 @@ class Join(CloudFormationLintRule):
                                     matches.append(RuleMatch(
                                         path, message.format('/'.join(map(str, path)))))
                             elif key in ['Fn::GetAtt']:
-                                if self._is_getatt_a_list(self._normalize_getatt(value), get_atts):
+                                if self._is_getatt_a_list(self._normalize_getatt(value), get_atts) == 'TRUE':
                                     message = 'Fn::Join must not be a list at {0}'
                                     matches.append(RuleMatch(
                                         path, message.format('/'.join(map(str, path)))))

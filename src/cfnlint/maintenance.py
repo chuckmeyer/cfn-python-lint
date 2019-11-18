@@ -1,35 +1,23 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
 import fnmatch
 import json
 import logging
 import os
-import pkg_resources
 import jsonpointer
 import jsonpatch
 import cfnlint
 from cfnlint.helpers import get_url_content
+import cfnlint.data.ExtendedSpecs
 
 
 LOGGER = logging.getLogger(__name__)
 
 
 SPEC_REGIONS = {
-    'ap-east-1': 'https://s3.ap-east-1.amazonaws.com/cfn-resource-specifications-ap-east-1-prod/latest/CloudFormationResourceSpecification.json',
+    'ap-east-1': 'https://cfn-resource-specifications-ap-east-1-prod.s3.ap-east-1.amazonaws.com/latest/gzip/CloudFormationResourceSpecification.json',
     'ap-northeast-1': 'https://d33vqc0rt9ld30.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'ap-northeast-2': 'https://d1ane3fvebulky.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'ap-northeast-3': 'https://d2zq80gdmjim8k.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
@@ -37,19 +25,19 @@ SPEC_REGIONS = {
     'ap-southeast-1': 'https://doigdx0kgq9el.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'ap-southeast-2': 'https://d2stg8d246z9di.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'ca-central-1': 'https://d2s8ygphhesbe7.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
-    'cn-north-1': 'https://s3.cn-north-1.amazonaws.com.cn/cfn-resource-specifications-cn-north-1-prod/latest/CloudFormationResourceSpecification.json',
-    'cn-northwest-1': 'https://s3.cn-northwest-1.amazonaws.com.cn/cfn-resource-specifications-cn-northwest-1-prod/latest/CloudFormationResourceSpecification.json',
+    'cn-north-1': 'https://cfn-resource-specifications-cn-north-1-prod.s3.cn-north-1.amazonaws.com.cn/latest/gzip/CloudFormationResourceSpecification.json',
+    'cn-northwest-1': 'https://cfn-resource-specifications-cn-northwest-1-prod.s3.cn-northwest-1.amazonaws.com.cn/latest/gzip/CloudFormationResourceSpecification.json',
     'eu-central-1': 'https://d1mta8qj7i28i2.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'eu-north-1': 'https://diy8iv58sj6ba.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'eu-west-1': 'https://d3teyb21fexa9r.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'eu-west-2': 'https://d1742qcu2c1ncx.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'eu-west-3': 'https://d2d0mfegowb3wk.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
-    'me-south-1': 'https://s3.me-south-1.amazonaws.com/cfn-resource-specifications-me-south-1-prod/latest/CloudFormationResourceSpecification.json',
+    'me-south-1': 'https://cfn-resource-specifications-me-south-1-prod.s3.me-south-1.amazonaws.com/latest/gzip/CloudFormationResourceSpecification.json',
     'sa-east-1': 'https://d3c9jyj3w509b0.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'us-east-1': 'https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'us-east-2': 'https://dnwj8swjjbsbt.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
-    'us-gov-east-1': 'https://s3.us-gov-east-1.amazonaws.com/cfn-resource-specifications-us-gov-east-1-prod/latest/CloudFormationResourceSpecification.json',
-    'us-gov-west-1': 'https://s3.us-gov-west-1.amazonaws.com/cfn-resource-specifications-us-gov-west-1-prod/latest/CloudFormationResourceSpecification.json',
+    'us-gov-east-1': 'https://s3.us-gov-east-1.amazonaws.com/cfn-resource-specifications-us-gov-east-1-prod/latest/gzip/CloudFormationResourceSpecification.json',
+    'us-gov-west-1': 'https://s3.us-gov-west-1.amazonaws.com/cfn-resource-specifications-us-gov-west-1-prod/latest/gzip/CloudFormationResourceSpecification.json',
     'us-west-1': 'https://d68hl49wbnanq.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
     'us-west-2': 'https://d201a2mn26r7lk.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json',
 }
@@ -59,10 +47,8 @@ def update_resource_specs():
     """ Update Resource Specs """
 
     for region, url in SPEC_REGIONS.items():
-        filename = pkg_resources.resource_filename(
-            __name__,
-            '/data/CloudSpecs/%s.json' % region,
-        )
+        filename = os.path.join(os.path.dirname(cfnlint.__file__),
+                                'data/CloudSpecs/%s.json' % region)
         LOGGER.debug('Downloading template %s into %s', url, filename)
         spec = json.loads(get_url_content(url))
 
@@ -169,10 +155,11 @@ def patch_spec(content, region):
     for dirpath, _, filenames in os.walk(append_dir):
         filenames.sort()
         for filename in fnmatch.filter(filenames, '*.json'):
-            file_path = os.path.join(dirpath, filename).replace(append_dir, '')
-            LOGGER.info('Processing %s%s', region, file_path)
-            all_patches = jsonpatch.JsonPatch(cfnlint.helpers.load_resources(
-                'data/ExtendedSpecs/{}{}'.format(region, file_path)))
+            file_path = os.path.basename(filename)
+            module = dirpath.replace('%s' % append_dir, '%s' % region).replace('/', '.')
+            LOGGER.info('Processing %s/%s', module, file_path)
+            all_patches = jsonpatch.JsonPatch(cfnlint.helpers.load_resource(
+                'cfnlint.data.ExtendedSpecs.{}'.format(module), file_path))
 
             # Process the generic patches 1 by 1 so we can "ignore" failed ones
             for all_patch in all_patches:
@@ -193,10 +180,9 @@ def update_iam_policies():
 
     url = 'https://awspolicygen.s3.amazonaws.com/js/policies.js'
 
-    filename = pkg_resources.resource_filename(
-        __name__,
-        '/data/AdditionalSpecs/Policies.json',
-    )
+    filename = os.path.join(
+        os.path.dirname(cfnlint.data.AdditionalSpecs.__file__),
+        'Policies.json')
     LOGGER.debug('Downloading policies %s into %s', url, filename)
 
     content = get_url_content(url)

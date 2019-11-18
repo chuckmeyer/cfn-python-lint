@@ -1,22 +1,11 @@
 """
-  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this
-  software and associated documentation files (the "Software"), to deal in the Software
-  without restriction, including without limitation the rights to use, copy, modify,
-  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 """
 from cfnlint.rules import CloudFormationLintRule
 from cfnlint.rules import RuleMatch
 import cfnlint.helpers
+from cfnlint.data import AdditionalSpecs
 
 
 class Exclusive(CloudFormationLintRule):
@@ -31,7 +20,7 @@ class Exclusive(CloudFormationLintRule):
     def __init__(self):
         """Init"""
         super(Exclusive, self).__init__()
-        exclusivespec = cfnlint.helpers.load_resources('data/AdditionalSpecs/Exclusive.json')
+        exclusivespec = cfnlint.helpers.load_resource(AdditionalSpecs, 'Exclusive.json')
         self.resource_types_specs = exclusivespec['ResourceTypes']
         self.property_types_specs = exclusivespec['PropertyTypes']
         for resource_type_spec in self.resource_types_specs:
@@ -56,11 +45,13 @@ class Exclusive(CloudFormationLintRule):
                                     message.format(excl_property, prop, '/'.join(map(str, path)))
                                 ))
                             else:
-                                scenario_text = ' and '.join(['when condition "%s" is %s' % (k, v) for (k, v) in property_set['Scenario'].items()])
+                                scenario_text = ' and '.join(['when condition "%s" is %s' % (
+                                    k, v) for (k, v) in property_set['Scenario'].items()])
                                 message = 'Property {0} should NOT exist with {1} {2} for {3}'
                                 matches.append(RuleMatch(
                                     path + [prop],
-                                    message.format(excl_property, prop, scenario_text, '/'.join(map(str, path)))
+                                    message.format(excl_property, prop, scenario_text,
+                                                   '/'.join(map(str, path)))
                                 ))
 
         return matches
